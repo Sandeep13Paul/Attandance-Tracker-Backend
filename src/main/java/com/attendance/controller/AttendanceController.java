@@ -1,0 +1,52 @@
+package com.attendance.controller;
+
+import com.attendance.dto.ApiResponse;
+import com.attendance.dto.AttendanceDTO;
+import com.attendance.service.AttendanceService;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+
+@RestController
+@CrossOrigin(origins = "*")   // 🔥 allow frontend
+@RequestMapping("/api/attendance")
+public class AttendanceController {
+
+    private final AttendanceService service;
+
+    public AttendanceController(AttendanceService service) {
+        this.service = service;
+    }
+
+    @PostMapping("/mark")
+    public ApiResponse<AttendanceDTO> mark(
+            @RequestParam Long userId,
+            @RequestParam Long subjectId,
+            @RequestParam boolean present
+    ) {
+        return service.mark(userId, subjectId, present);
+    }
+
+    @GetMapping
+    public ApiResponse<?> get(
+            @RequestParam String start,
+            @RequestParam String end,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return service.getFiltered(
+                LocalDate.parse(start),
+                LocalDate.parse(end),
+                page,
+                size
+        );
+    }
+
+    @PostMapping("/mark-all")
+    public ApiResponse<String> markAll(
+            @RequestParam Long userId,
+            @RequestParam boolean present
+    ) {
+        return service.markAllSubjects(userId, present);
+    }
+}
