@@ -19,6 +19,11 @@ public class User {
     private String name;
     private String email;
 
+    private String password; // 🔐 NEW
+
+    @Enumerated(EnumType.STRING)
+    private Role role; // 🔥 NEW
+
     public Long getId() {
         return id;
     }
@@ -29,6 +34,14 @@ public class User {
 
     public String getName() {
         return name;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public void setName(String name) {
@@ -49,6 +62,17 @@ public class User {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", role=" + role +
                 '}';
     }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
 }

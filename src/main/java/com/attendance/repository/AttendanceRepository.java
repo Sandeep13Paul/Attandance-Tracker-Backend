@@ -21,7 +21,11 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
             Pageable pageable
     );
 
-    Optional<Object> findByUserAndSubjectAndDate(User user, Subject subject, LocalDate today);
+    Optional<Attendance> findByUserAndSubjectAndDate(
+            User user,
+            Subject subject,
+            LocalDate date
+    );
 
     @Query("""
     SELECT s.name,\s
@@ -32,4 +36,11 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     GROUP BY s.name
    \s""")
     List<Object[]> getSubjectStats();
+
+    Page<Attendance> findByUserAndDateBetween(
+            User user,
+            LocalDate start,
+            LocalDate end,
+            Pageable pageable
+    );
 }

@@ -19,28 +19,29 @@ public class AttendanceController {
     }
 
     @PostMapping("/mark")
-    public ApiResponse<AttendanceDTO> mark(
-            @RequestParam Long userId,
+    public ApiResponse<?> mark(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(required = false) Long userId,
             @RequestParam Long subjectId,
             @RequestParam boolean present
     ) {
-        return service.mark(userId, subjectId, present);
+        return service.mark(authHeader, userId, subjectId, present);
     }
 
-    @GetMapping
-    public ApiResponse<?> get(
-            @RequestParam String start,
-            @RequestParam String end,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        return service.getFiltered(
-                LocalDate.parse(start),
-                LocalDate.parse(end),
-                page,
-                size
-        );
-    }
+//    @GetMapping
+//    public ApiResponse<?> get(
+//            @RequestParam String start,
+//            @RequestParam String end,
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "10") int size
+//    ) {
+//        return service.getFiltered(
+//                LocalDate.parse(start),
+//                LocalDate.parse(end),
+//                page,
+//                size
+//        );
+//    }
 
     @PostMapping("/mark-all")
     public ApiResponse<String> markAll(
@@ -48,5 +49,16 @@ public class AttendanceController {
             @RequestParam boolean present
     ) {
         return service.markAllSubjects(userId, present);
+    }
+
+    @GetMapping
+    public ApiResponse<?> get(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam String start,
+            @RequestParam String end,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return service.getFiltered(authHeader, start, end, page, size);
     }
 }
