@@ -40,65 +40,6 @@ public class AttendanceService {
         this.jwtUtil = jwtUtil;
     }
 
-//    public ApiResponse<AttendanceDTO> mark(Long userId, Long subjectId, boolean present) {
-//
-//        User user = userRepo.findById(userId).orElseThrow();
-//        Subject subject = subjectRepo.findById(subjectId).orElseThrow();
-//
-//        LocalDate today = LocalDate.now();
-//
-//        // ✅ Prevent duplicate for same user + subject + date
-//        attendanceRepo.findByUserAndSubjectAndDate(user, subject, today)
-//                .ifPresent(a -> attendanceRepo.delete((Attendance) a));
-//
-//        Attendance attendance = new Attendance();
-//        attendance.setUser(user);
-//        attendance.setSubject(subject);
-//        attendance.setDate(today);
-//        attendance.setPresent(present);
-//
-//        attendanceRepo.save(attendance);
-//
-//        AttendanceDTO dto = new AttendanceDTO(
-//                user.getId(),
-//                user.getName(),
-//                attendance.getDate(),
-//                present
-//        );
-//
-//        dto.setSubjectName(subject.getName());
-//
-//        return new ApiResponse<>(true, "Marked", dto);
-//    }
-
-//    public ApiResponse<Page<AttendanceDTO>> getFiltered(
-//            LocalDate start,
-//            LocalDate end,
-//            int page,
-//            int size
-//    ) {
-//
-//        Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
-//
-//        Page<AttendanceDTO> result = attendanceRepo
-//                .findByUserAndDateBetween(user, start, end, pageable)
-//                .map(a -> {
-//                    AttendanceDTO dto = new AttendanceDTO(
-//                            a.getUser().getId(),
-//                            a.getUser().getName(),
-//                            a.getDate(),
-//                            a.isPresent()
-//                    );
-//
-//                    // ✅ IMPORTANT FIX
-//                    dto.setSubjectName(a.getSubject().getName());
-//
-//                    return dto;
-//                });
-//
-//        return new ApiResponse<>(true, "Fetched", result);
-//    }
-
     public ApiResponse<AttendanceDTO> mark(
             String authHeader,
             Long userId,      // only used by ADMIN
@@ -220,21 +161,43 @@ public class AttendanceService {
         return new ApiResponse<>(true, "All subjects marked", null);
     }
 
-    public Object getSubjectStats() {
-        List<Map<String, Serializable>> list = new ArrayList<>();
-        for (Object[] objects : attendanceRepo.getSubjectStats()) {
-            String subject = (String) objects[0];
-            Long present = (Long) objects[1];
-            Long total = (Long) objects[2];
+    public ApiResponse<List<Map<String, Object>>> getSubjectStats(
+            String authHeader,
+            Long userId // optional
+    ) {
+
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtil.extractEmail(token);
+        String role = jwtUtil.extractRole(token);
+
+        User loggedInUser = userRepo.findByEmail(email).orElseThrow();
+
+        User targetUser;
+
+        if ("ADMIN".equals(role)) {
+            targetUser = (userId != null)
+                    ? userRepo.findById(userId).orElseThrow()
+                    : loggedInUser; // default
+        } else {
+            targetUser = loggedInUser;
+        }
+
+        List<Map<String, Object>> list = new ArrayList<>();
+
+        for (Object[] row : attendanceRepo.getSubjectStatsByUser(targetUser)) {
+
+            String subject = (String) row[0];
+            Long present = (Long) row[1];
+            Long total = (Long) row[2];
 
             double percent = total == 0 ? 0 : (present * 100.0 / total);
 
-            Map<String, ? extends Serializable> apply = Map.of(
+            list.add(Map.of(
                     "subject", subject,
                     "percent", percent
-            );
-            list.add((Map<String, Serializable>) apply);
+            ));
         }
-        return list;
+
+        return new ApiResponse<>(true, "Subject stats", list);
     }
 }

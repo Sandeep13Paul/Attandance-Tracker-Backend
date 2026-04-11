@@ -43,4 +43,15 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
             LocalDate end,
             Pageable pageable
     );
+
+    @Query("""
+    SELECT s.name,
+           SUM(CASE WHEN a.present = true THEN 1 ELSE 0 END),
+           COUNT(a)
+    FROM Attendance a
+    JOIN a.subject s
+    WHERE a.user = :user
+    GROUP BY s.name
+""")
+    List<Object[]> getSubjectStatsByUser(User user);
 }

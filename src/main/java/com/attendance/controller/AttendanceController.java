@@ -28,21 +28,6 @@ public class AttendanceController {
         return service.mark(authHeader, userId, subjectId, present);
     }
 
-//    @GetMapping
-//    public ApiResponse<?> get(
-//            @RequestParam String start,
-//            @RequestParam String end,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "10") int size
-//    ) {
-//        return service.getFiltered(
-//                LocalDate.parse(start),
-//                LocalDate.parse(end),
-//                page,
-//                size
-//        );
-//    }
-
     @PostMapping("/mark-all")
     public ApiResponse<String> markAll(
             @RequestParam Long userId,
@@ -60,5 +45,13 @@ public class AttendanceController {
             @RequestParam(defaultValue = "10") int size
     ) {
         return service.getFiltered(authHeader, start, end, page, size);
+    }
+
+    @GetMapping("/subject-stats")
+    public ApiResponse<?> subjectStats(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(required = false) Long userId
+    ) {
+        return service.getSubjectStats(authHeader, userId);
     }
 }
