@@ -44,7 +44,8 @@ public class AttendanceService {
             String authHeader,
             Long userId,      // only used by ADMIN
             Long subjectId,
-            boolean present
+            boolean present,
+            LocalDate date // 🔥 NEW
     ) {
 
         // 🔐 Extract token
@@ -72,17 +73,17 @@ public class AttendanceService {
         Subject subject = subjectRepo.findById(subjectId)
                 .orElseThrow(() -> new RuntimeException("Subject not found"));
 
-        LocalDate today = LocalDate.now();
+        LocalDate targetDate = (date != null) ? date : LocalDate.now();
 
         // ✅ Prevent duplicate
-        attendanceRepo.findByUserAndSubjectAndDate(targetUser, subject, today)
+        attendanceRepo.findByUserAndSubjectAndDate(targetUser, subject, targetDate)
                 .ifPresent(attendanceRepo::delete);
 
         // 📝 Create attendance
         Attendance attendance = new Attendance();
         attendance.setUser(targetUser);
         attendance.setSubject(subject);
-        attendance.setDate(today);
+        attendance.setDate(targetDate);
         attendance.setPresent(present);
 
         attendanceRepo.save(attendance);
@@ -91,7 +92,7 @@ public class AttendanceService {
         AttendanceDTO dto = new AttendanceDTO(
                 targetUser.getId(),
                 targetUser.getName(),
-                attendance.getDate(),
+                targetDate,
                 present
         );
 

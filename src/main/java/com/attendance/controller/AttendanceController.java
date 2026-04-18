@@ -23,9 +23,11 @@ public class AttendanceController {
             @RequestHeader("Authorization") String authHeader,
             @RequestParam(required = false) Long userId,
             @RequestParam Long subjectId,
-            @RequestParam boolean present
+            @RequestParam boolean present,
+            @RequestParam(required = false) String date
     ) {
-        return service.mark(authHeader, userId, subjectId, present);
+        LocalDate d = (date != null) ? LocalDate.parse(date) : null;
+        return service.mark(authHeader, userId, subjectId, present, d);
     }
 
     @PostMapping("/mark-all")
