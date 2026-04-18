@@ -2,16 +2,25 @@
 FROM maven:3.9.9-eclipse-temurin-21 AS build
 
 WORKDIR /app
-COPY . .
 
+# Copy only required files first (for caching)
+COPY pom.xml .
+RUN mvn dependency:go-offline
+
+# Now copy source
+COPY src ./src
+
+# Build jar
 RUN mvn clean package -DskipTests
 
 # Stage 2: Run
 FROM eclipse-temurin:21-jdk-jammy
 
 WORKDIR /app
+
+# Copy jar from build stage
 COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
