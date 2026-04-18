@@ -32,10 +32,11 @@ public class AttendanceController {
 
     @PostMapping("/mark-all")
     public ApiResponse<String> markAll(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestParam Long userId,
             @RequestParam boolean present
     ) {
-        return service.markAllSubjects(userId, present);
+        return service.markAllSubjects(authHeader, userId, present);
     }
 
     @GetMapping
@@ -52,8 +53,35 @@ public class AttendanceController {
     @GetMapping("/subject-stats")
     public ApiResponse<?> subjectStats(
             @RequestHeader("Authorization") String authHeader,
-            @RequestParam(required = false) Long userId
+            @RequestParam(defaultValue = "0", required = false) Long userId
     ) {
         return service.getSubjectStats(authHeader, userId);
+    }
+
+    @GetMapping("/trend")
+    public ApiResponse<?> trend(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0", required = false) Long userId,
+            @RequestParam LocalDate start,
+            @RequestParam LocalDate end
+    ) {
+        return new ApiResponse<>(true, "Trend", service.getWeeklyTrend(authHeader, userId, start, end));
+    }
+
+    @GetMapping("/streak")
+    public ApiResponse<?> streak(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0", required = false) Long userId
+    ) {
+        return new ApiResponse<>(true, "Streak", service.getStreak(authHeader, userId));
+    }
+
+    @GetMapping("/low")
+    public ApiResponse<?> low(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0", required = false) Long userId
+    ) {
+        return new ApiResponse<>(true, "Low",
+                service.getLowAttendance(authHeader, userId));
     }
 }
