@@ -306,27 +306,38 @@ public class AttendanceService {
 
         if (list.isEmpty()) return 0;
 
-        int streak = 0;
-        LocalDate expectedDate = list.get(0).getDate();
+        // Convert to map for quick lookup
+        Map<LocalDate, Boolean> attendanceMap = new HashMap<>();
 
         for (Attendance a : list) {
+            attendanceMap.put(a.getDate(), a.isPresent());
+        }
 
-            LocalDate current = a.getDate();
+        int streak = 0;
 
-            // skip weekends
-            while (DateHelper.isWeekend(expectedDate)) {
-                expectedDate = expectedDate.minusDays(1);
+        LocalDate current = LocalDate.now();
+
+        if (!attendanceMap.containsKey(current)) {
+            current = current.minusDays(1);
+        }
+
+        while (true) {
+
+            // ⛔ Skip weekends
+            if (DateHelper.isWeekend(current)) {
+                current = current.minusDays(1);
+                continue;
             }
 
-            if (!current.equals(expectedDate)) break;
+            Boolean present = attendanceMap.get(current);
 
-            if (a.isPresent()) {
-                streak++;
-            } else {
+            // ❌ No record OR absent → break
+            if (present == null || !present) {
                 break;
             }
 
-            expectedDate = expectedDate.minusDays(1);
+            streak++;
+            current = current.minusDays(1);
         }
 
         return streak;
