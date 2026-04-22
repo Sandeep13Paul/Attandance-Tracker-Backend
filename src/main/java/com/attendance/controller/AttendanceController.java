@@ -84,4 +84,13 @@ public class AttendanceController {
         return new ApiResponse<>(true, "Low",
                 service.getLowAttendance(authHeader, userId));
     }
+
+    @GetMapping("/needed")
+    public ApiResponse<?> needed(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0", required = false) Long userId
+    ) {
+        return new ApiResponse<>(true, "Needed",
+                service.getNeededPerSubject(authHeader, userId));
+    }
 }

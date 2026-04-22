@@ -3,6 +3,7 @@ package com.attendance.service;
 import com.attendance.config.JwtUtil;
 import com.attendance.dto.ApiResponse;
 import com.attendance.dto.AttendanceDTO;
+import com.attendance.dto.SubjectNeededDTO;
 import com.attendance.entity.Attendance;
 import com.attendance.entity.Subject;
 import com.attendance.entity.User;
@@ -226,51 +227,6 @@ public class AttendanceService {
         return new ApiResponse<>(true, "Subject stats", list);
     }
 
-//    public List<Map<String, Object>> getWeeklyTrend(Long userId, LocalDate start, LocalDate end) {
-//
-//        User user = userRepo.findById(userId).orElseThrow();
-//
-//        List<Attendance> list = attendanceRepo
-//                .findByUserAndDateBetween(user, start, end);
-//
-//        // ✅ group by week start date (MONDAY)
-//        Map<LocalDate, List<Attendance>> grouped = list.stream()
-//                .collect(Collectors.groupingBy(a ->
-//                        a.getDate().with(DayOfWeek.MONDAY)
-//                ));
-//
-//        // ✅ sort by week
-//        Map<LocalDate, List<Attendance>> sorted = new TreeMap<>(grouped);
-//
-//        List<Map<String, Object>> result = new ArrayList<>();
-//
-//        for (LocalDate weekStart : sorted.keySet()) {
-//
-//            List<Attendance> weekData = sorted.get(weekStart);
-//
-//            long present = weekData.stream().filter(Attendance::isPresent).count();
-//            long total = weekData.size();
-//
-//            double percent = total == 0 ? 0 : (present * 100.0 / total);
-//
-//            // ✅ make readable label
-//            LocalDate weekEnd = weekStart.plusDays(6);
-//
-//            String label = weekStart.getMonth().toString().substring(0, 3) + " "
-//                    + weekStart.getDayOfMonth()
-//                    + " - "
-//                    + weekEnd.getMonth().toString().substring(0, 3) + " "
-//                    + weekEnd.getDayOfMonth();
-//
-//            result.add(Map.of(
-//                    "week", label,
-//                    "percent", percent
-//            ));
-//        }
-//
-//        return result;
-//    }
-
     public List<Map<String, Object>> getWeeklyTrend(String authHeader, Long userId, LocalDate start, LocalDate end) {
 
         User user = resolveUser(authHeader, userId);
@@ -385,5 +341,33 @@ public class AttendanceService {
         for (User user : userRepo.findAll()) {
             checkAndSendAlerts(null, user.getId());
         }
+    }
+
+    public List<SubjectNeededDTO> getNeededPerSubject(String authHeader, Long userId) {
+
+        User user = resolveUser(authHeader, userId);
+
+        List<Object[]> stats = attendanceRepo.getSubjectStatsByUser(user);
+
+        List<SubjectNeededDTO> result = new ArrayList<>();
+
+        for (Object[] row : stats) {
+
+            String subject = (String) row[0];
+            long present = (long) row[1];
+            long total = (long) row[2];
+
+            double percent = total == 0 ? 0 : (present * 100.0 / total);
+
+            int needed = 0;
+
+            if (percent < 75) {
+                needed = (int) Math.ceil((75 * total - present * 100.0) / (100 - 75));
+            }
+
+            result.add(new SubjectNeededDTO(subject, percent, needed));
+        }
+
+        return result;
     }
 }
