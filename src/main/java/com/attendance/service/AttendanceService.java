@@ -22,6 +22,7 @@ import java.util.*;
 import com.attendance.utility.DateHelper;
 
 import java.time.LocalDate;
+import java.util.stream.Collectors;
 
 @Service
 public class AttendanceService {
@@ -303,11 +304,29 @@ public class AttendanceService {
         List<Attendance> list = attendanceRepo
                 .findByUserIdOrderByDateDesc(userId);
 
+        if (list.isEmpty()) return 0;
+
         int streak = 0;
+        LocalDate expectedDate = list.get(0).getDate();
 
         for (Attendance a : list) {
-            if (a.isPresent()) streak++;
-            else break;
+
+            LocalDate current = a.getDate();
+
+            // skip weekends
+            while (DateHelper.isWeekend(expectedDate)) {
+                expectedDate = expectedDate.minusDays(1);
+            }
+
+            if (!current.equals(expectedDate)) break;
+
+            if (a.isPresent()) {
+                streak++;
+            } else {
+                break;
+            }
+
+            expectedDate = expectedDate.minusDays(1);
         }
 
         return streak;

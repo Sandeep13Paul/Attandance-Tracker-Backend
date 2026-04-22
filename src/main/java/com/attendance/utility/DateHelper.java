@@ -28,4 +28,9 @@ public class DateHelper {
                 + " - "
                 + endMonth + " " + end.getDayOfMonth();
     }
+
+    public static boolean isWeekend(LocalDate date) {
+        return date.getDayOfWeek() == DayOfWeek.SATURDAY ||
+                date.getDayOfWeek() == DayOfWeek.SUNDAY;
+    }
 }
